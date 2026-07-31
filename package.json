@@ -1,0 +1,54 @@
+{
+  "name": "gan2x2ui",
+  "version": "0.1.0",
+  "description": "Open-source Web Bluetooth driver for GAN 251 UI (2×2 smart cube)",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./crypto": "./src/crypto.js",
+    "./protocol": "./src/ble_protocol.js",
+    "./cube2x2": "./src/cube2x2.js",
+    "./scramble": "./src/scramble.js",
+    "./orientation": "./src/orientation.js",
+    "./alg": "./src/alg.js"
+  },
+  "files": [
+    "src",
+    "docs",
+    "examples",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "serve": "npx --yes serve -l 8080 .",
+    "test": "node --test test/*.test.mjs"
+  },
+  "keywords": [
+    "gan",
+    "gan251",
+    "gan-251-ui",
+    "bluetooth",
+    "web-bluetooth",
+    "rubiks-cube",
+    "2x2",
+    "smart-cube",
+    "speedcubing",
+    "cubestation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thomaslekieffre/gan2x2ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thomaslekieffre/gan2x2ui/issues"
+  },
+  "homepage": "https://github.com/thomaslekieffre/gan2x2ui#readme",
+  "author": "thomaslekieffre",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false
+}

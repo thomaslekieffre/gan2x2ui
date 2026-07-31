@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAN 251 UI — Timer</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #0a0c0b; --bg1: #121612; --ink: #d7e0d5; --muted: #6f7a6e;
+    --accent: #9be15d; --danger: #ff6b4a; --line: #243024; --warn: #e6c200; --info: #7ec8ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg0); color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+  body {
+    display: grid; grid-template-rows: auto auto 1fr;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 20%, #1a2a18 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 10% 90%, #152018 0%, transparent 50%),
+      var(--bg0);
+  }
+  header, .bar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid var(--line);
+    background: color-mix(in oklab, var(--bg1) 88%, transparent);
+  }
+  h1 { font-family: Syne, sans-serif; font-size: 1.05rem; margin: 0 8px 0 0; }
+  h1 span { color: var(--accent); }
+  input, button {
+    font: inherit; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--bg0); color: var(--ink); padding: 7px 11px;
+  }
+  button { background: #1c281c; cursor: pointer; border-color: #2f3f2f; }
+  button:hover:not(:disabled) { background: #243324; }
+  button.primary { background: var(--accent); color: #0a1208; border-color: transparent; font-weight: 600; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  label.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; }
+  #scramble {
+    flex: 1; min-width: 200px; font-size: 18px; letter-spacing: .04em;
+    font-weight: 600; line-height: 1.35;
+  }
+  #phase { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  #phase.scramble { color: #c4a5ff; }
+  #phase.inspection { color: var(--warn); }
+  #phase.running { color: var(--accent); }
+  #phase.stopped { color: var(--info); }
+  #stage { position: relative; min-height: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  #timer {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    font-family: Syne, sans-serif; font-size: clamp(48px, 10vw, 92px); font-weight: 700;
+    letter-spacing: -0.03em; color: var(--ink); text-shadow: 0 2px 24px #000a;
+    pointer-events: none; tabular-nums; z-index: 2;
+  }
+  #timer.inspection { color: var(--warn); }
+  #timer.running { color: var(--accent); }
+  #timer.stopped { color: var(--info); }
+  #phases {
+    position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: var(--muted); text-align: center; pointer-events: none; z-index: 2;
+  }
+  #hud {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    display: flex; justify-content: space-between; gap: 12px; pointer-events: none;
+    font-size: 12px; color: var(--muted); z-index: 2;
+  }
+  #moves { color: var(--accent); font-size: 13px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #toast {
+    position: absolute; top: 16px; right: 16px; max-width: 300px; font-size: 11px;
+    color: var(--muted); text-align: right; max-height: 28vh; overflow: auto; pointer-events: none; z-index: 2;
+  }
+  .err { color: var(--danger); }
+  #times { color: var(--muted); font-size: 11px; text-align: right; max-height: 28vh; overflow: auto; }
+
+  /* —— result overlay —— */
+  #result {
+    display: none; position: absolute; inset: 0; z-index: 10;
+    background: color-mix(in oklab, var(--bg0) 78%, transparent);
+    backdrop-filter: blur(8px);
+    padding: 24px 16px; overflow: auto;
+  }
+  #result.open { display: grid; place-items: start center; }
+  .card {
+    width: min(560px, 100%);
+    background: var(--bg1); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; pointer-events: auto;
+  }
+  .card h2 { font-family: Syne, sans-serif; margin: 0 0 4px; font-size: 1.1rem; }
+  .card .big {
+    font-family: Syne, sans-serif; font-size: clamp(40px, 9vw, 64px); font-weight: 700;
+    letter-spacing: -0.03em; color: var(--info); margin: 8px 0 4px; tabular-nums;
+  }
+  .card .big .pen { color: var(--danger); font-size: 0.45em; vertical-align: super; margin-left: 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 16px; }
+  .stat { background: var(--bg0); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat b { display: block; color: var(--ink); font-size: 15px; margin-top: 2px; }
+  .stat span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+  .reco-label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+  .reco {
+    background: var(--bg0); border-radius: 8px; padding: 10px 12px;
+    font-size: 13px; line-height: 1.45; word-break: break-word; color: var(--accent);
+    min-height: 2.5em;
+  }
+  #twistyHost {
+    margin: 14px 0; height: 220px; background: var(--bg0); border-radius: 8px;
+    overflow: hidden; display: grid; place-items: center;
+  }
+  #twistyHost twisty-player { width: 100% !important; height: 220px !important; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GAN 251 <span>UI</span></h1>
+  <input id="mac" value="AA:BB:CC:DD:EE:FF" style="width:148px" title="MAC">
+  <button class="primary" id="btnConnect">Connecter</button>
+  <button id="btnDisc" disabled>Disconnect</button>
+  <button id="btnBat" disabled>Battery</button>
+  <label class="chk"><input type="checkbox" id="chkGyro" checked> Gyro</label>
+  <label class="chk"><input type="checkbox" id="chkSmooth" checked> Smooth</label>
+  <span id="batt" style="margin-left:auto;color:var(--muted)">bat —</span>
+</header>
+<div class="bar">
+  <button class="primary" id="btnScramble" disabled>Mélanger</button>
+  <button id="btnSkip" disabled title="Force inspection">Skip → insp.</button>
+  <button id="btnCalib" disabled title="Blanc↑ vert→ puis clique">Calib ori</button>
+  <button id="btnResetCam">Reset cam</button>
+  <span id="phase">idle</span>
+  <div id="scramble">—</div>
+</div>
+<div id="stage">
+  <div id="timer">0.000</div>
+  <div id="phases"></div>
+  <div id="hud">
+    <div>
+      <div id="status"><strong>offline</strong></div>
+      <div id="moves">—</div>
+    </div>
+    <div id="times"></div>
+  </div>
+  <div id="toast"></div>
+  <div id="result">
+    <div class="card">
+      <h2>Solve</h2>
+      <div class="big" id="resTime">0.000</div>
+      <div class="stats">
+        <div class="stat"><span>Moves</span><b id="resMoves">—</b></div>
+        <div class="stat"><span>TPS</span><b id="resTps">—</b></div>
+        <div class="stat"><span>Inspection</span><b id="resInsp">—</b></div>
+      </div>
+      <div class="reco-label">Scramble</div>
+      <div class="reco" id="resScramble" style="color:var(--ink);margin-bottom:10px">—</div>
+      <div class="reco-label">Reconstruction HTM (U U→U2 · F' F'→F2)</div>
+      <div class="reco" id="resReco">—</div>
+      <div id="twistyHost"></div>
+      <div class="actions">
+        <button class="primary" id="btnNext">Nouveau mélange</button>
+        <button id="btnCopy">Copier reco</button>
+        <button id="btnCloseRes">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+    "gan2x2ui": "../src/index.js?v=20",
+    "cubing/twisty": "https://cdn.cubing.net/v0/js/cubing/twisty"
+  }
+}
+</script>
+<script type="module">
+import {
+  scramble2x2Official,
+  statesEqual,
+  parseAlg,
+  mergeMoves,
+  Gan2x2UI,
+  FACE_HEX,
+  U, R, F, D, L, B,
+  Cube2x2,
+  OrientationTracker,
+} from "gan2x2ui";
+
+const statusEl = document.getElementById("status");
+const movesEl = document.getElementById("moves");
+const toast = document.getElementById("toast");
+const battEl = document.getElementById("batt");
+const timerEl = document.getElementById("timer");
+const phaseEl = document.getElementById("phase");
+const phasesEl = document.getElementById("phases");
+const scrambleEl = document.getElementById("scramble");
+const timesEl = document.getElementById("times");
+const resultEl = document.getElementById("result");
+const btnConnect = document.getElementById("btnConnect");
+
+const INSPECTION_MS = 15_000;
+const history = [];
+const moveLog = [];
+
+/** @type {'idle'|'scramble'|'inspection'|'running'|'stopped'} */
+let phase = "idle";
+let t0 = 0;
+let tAcc = 0;
+let rafTimer = 0;
+let moveCount = 0;
+let targetState = null;
+let scrambleMoves = [];
+let scrambleProgress = 0;
+let inspectionUsed = 0;
+/** raw HW quarters — jamais merge inline */
+let rawSolveMoves = [];
+let currentScramble = "";
+let t0Cube = null;
+let lastResult = null;
+let conn = null;
+
+let paintFromCube = () => {};
+let applyGyro = () => {};
+let calibrateGyro = () => {};
+let resetCamera = () => {};
+let animateMove = () => {};
+/** @type {(on: boolean) => void} */
+let setGyroFollow = () => {};
+const ori = new OrientationTracker();
+
+function tip(msg, cls = "") {
+  const d = document.createElement("div");
+  if (cls) d.className = cls;
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  toast.prepend(d);
+  while (toast.childNodes.length > 12) toast.lastChild.remove();
+}
+
+function fmt(ms) {
+  const s = Math.max(0, ms) / 1000;
+  if (s < 60) return s.toFixed(3);
+  const m = (s / 60) | 0;
+  return m + ":" + (s % 60).toFixed(3).padStart(6, "0");
+}
+
+function scramblePrefixLen(done, expected) {
+  const a = mergeMoves(done);
+  let i = 0;
+  while (i < a.length && i < expected.length && a[i] === expected[i]) i++;
+  return i;
+}
+
+/** Rebuild 3D state from scramble progress (solved + moves validés). */
+function paintScrambleState() {
+  if (!conn?.cube) return;
+  conn.cube.reset();
+  const n = scramblePrefixLen(moveLog, scrambleMoves);
+  for (let i = 0; i < n; i++) conn.cube.applyMove(scrambleMoves[i]);
+  const merged = mergeMoves(moveLog);
+  if (merged.length > n) {
+    const partial = merged[n];
+    const next = scrambleMoves[n];
+    if (partial && next && partial[0] === next[0]) conn.cube.applyMove(partial);
+  }
+  paintFromCube(conn.cube);
+}
+
+function acceptScrambleMove(mv) {
+  const n0 = scramblePrefixLen(moveLog, scrambleMoves);
+  const trial = moveLog.concat(mv);
+  const n1 = scramblePrefixLen(trial, scrambleMoves);
+  if (n1 > n0) return true;
+  const merged = mergeMoves(trial);
+  const next = scrambleMoves[n0];
+  const partial = merged[n0];
+  return !!(next && partial && partial[0] === next[0]);
+}
+
+function renderScrambleHighlight() {
+  if (!scrambleMoves.length || phase !== "scramble") {
+    if (currentScramble) scrambleEl.textContent = currentScramble;
+    return;
+  }
+  const next = scrambleProgress;
+  scrambleEl.innerHTML = scrambleMoves
+    .map((m, i) => {
+      if (i < next) return `<span style="opacity:.35">${m}</span>`;
+      if (i === next) return `<span style="color:var(--warn);text-decoration:underline">${m}</span>`;
+      return m;
+    })
+    .join(" ");
+}
+
+function setPhase(p) {
+  phase = p;
+  phaseEl.textContent = p;
+  phaseEl.className = p;
+  timerEl.className = p === "running" || p === "stopped" || p === "inspection" ? p : "";
+  document.getElementById("btnSkip").disabled = p !== "scramble";
+  renderPhases();
+  renderScrambleHighlight();
+}
+
+function renderPhases() {
+  if (phase === "idle") {
+    phasesEl.textContent = "";
+    return;
+  }
+  if (phase === "scramble") {
+    const n = scrambleMoves.length;
+    const next = scrambleMoves[scrambleProgress];
+    phasesEl.textContent = next
+      ? `scramble ${scrambleProgress}/${n} → ${next}`
+      : `scramble ${scrambleProgress}/${n}`;
+    return;
+  }
+  if (phase === "inspection") {
+    const elapsed = performance.now() - t0;
+    const left = INSPECTION_MS - elapsed;
+    phasesEl.textContent =
+      left >= 0 ? `inspection · reste ${fmt(left)}` : `inspection +${fmt(-left)} (+2 / DNF)`;
+    return;
+  }
+  if (phase === "running") {
+    phasesEl.textContent = `insp ${fmt(inspectionUsed)} · ${mergeMoves(rawSolveMoves).length} moves`;
+    return;
+  }
+  if (phase === "stopped") {
+    const n = mergeMoves(rawSolveMoves).length;
+    const tps = tAcc > 0 ? (n / (tAcc / 1000)).toFixed(2) : "—";
+    phasesEl.textContent = `${fmt(tAcc)} · ${n} moves · ${tps} tps`;
+  }
+}
+
+function tickTimer() {
+  if (phase === "running") {
+    tAcc = performance.now() - t0;
+    timerEl.textContent = fmt(tAcc);
+    renderPhases();
+    rafTimer = requestAnimationFrame(tickTimer);
+  } else if (phase === "inspection") {
+    const elapsed = performance.now() - t0;
+    const left = INSPECTION_MS - elapsed;
+    timerEl.textContent = left >= 0 ? fmt(left) : `+${fmt(-left)}`;
+    renderPhases();
+    rafTimer = requestAnimationFrame(tickTimer);
+  }
+}
+
+function startInspection() {
+  cancelAnimationFrame(rafTimer);
+  inspectionUsed = 0;
+  moveCount = 0;
+  rawSolveMoves = [];
+  moveLog.length = 0;
+  movesEl.textContent = "—";
+  // état 3D = scramble cible (évite drift)
+  if (targetState && conn?.cube) {
+    conn.cube.setFromFacelets(targetState.cp, targetState.co);
+    paintFromCube(conn.cube);
+  }
+  if (conn) conn.applyMoves = true;
+  setGyroFollow(document.getElementById("chkGyro")?.checked !== false);
+  t0 = performance.now();
+  setPhase("inspection");
+  rafTimer = requestAnimationFrame(tickTimer);
+  tip("inspection 15s — 1er move = chrono");
+  conn?.send("FACELETS").catch(() => {});
+}
+
+function startTimer(ev) {
+  inspectionUsed = performance.now() - t0;
+  t0 = performance.now();
+  t0Cube = ev?.cubeTimestamp ?? null;
+  tAcc = 0;
+  setPhase("running");
+  cancelAnimationFrame(rafTimer);
+  rafTimer = requestAnimationFrame(tickTimer);
+  tip(`GO · insp ${fmt(inspectionUsed)}`);
+}
+
+function penaltyFor(inspMs) {
+  if (inspMs > 17_000) return "DNF";
+  if (inspMs > INSPECTION_MS) return "+2";
+  return "";
+}
+
+async function showResult(result) {
+  lastResult = result;
+  document.getElementById("resTime").innerHTML =
+    result.penalty === "DNF"
+      ? `DNF<span class="pen">(${fmt(result.t)})</span>`
+      : `${fmt(result.penalty === "+2" ? result.t + 2000 : result.t)}${
+          result.penalty ? `<span class="pen">${result.penalty}</span>` : ""
+        }`;
+  document.getElementById("resMoves").textContent = String(result.moves);
+  document.getElementById("resTps").textContent =
+    result.t > 0 ? (result.moves / (result.t / 1000)).toFixed(2) : "—";
+  document.getElementById("resInsp").textContent = fmt(result.insp);
+  document.getElementById("resScramble").textContent = result.scramble || "—";
+  document.getElementById("resReco").textContent = result.solveMoves.join(" ") || "—";
+
+  const host = document.getElementById("twistyHost");
+  host.innerHTML = "";
+  try {
+    const { TwistyPlayer } = await import("cubing/twisty");
+    const player = new TwistyPlayer({
+      puzzle: "2x2x2",
+      alg: result.solveMoves.join(" "),
+      experimentalSetupAlg: result.scramble || "",
+      hintFacelets: "none",
+      background: "none",
+      controlPanel: "bottom-row",
+      visualization: "PG3D",
+    });
+    player.style.width = "100%";
+    player.style.height = "220px";
+    host.appendChild(player);
+  } catch (e) {
+    host.innerHTML = `<span style="color:var(--muted);font-size:12px">Twisty KO: ${e.message}</span>`;
+  }
+
+  resultEl.classList.add("open");
+}
+
+function stopTimer(solved, ev) {
+  if (phase !== "running" && phase !== "inspection") return;
+  cancelAnimationFrame(rafTimer);
+  if (t0Cube != null && ev?.cubeTimestamp != null) {
+    tAcc = Math.max(0, ev.cubeTimestamp - t0Cube);
+  } else {
+    tAcc = performance.now() - t0;
+  }
+  // reco HTM : U U → U2, F' F' → F2, R R' → cancel
+  const solveMoves = mergeMoves(rawSolveMoves);
+  moveCount = solveMoves.length;
+  timerEl.textContent = fmt(tAcc);
+  setPhase("stopped");
+
+  const penalty = penaltyFor(inspectionUsed);
+  const result = {
+    t: tAcc,
+    moves: moveCount,
+    insp: inspectionUsed,
+    scramble: currentScramble,
+    penalty,
+    solveMoves,
+    rawMoves: rawSolveMoves.slice(),
+    solved: !!solved,
+  };
+  history.unshift(result);
+  if (history.length > 20) history.pop();
+  timesEl.innerHTML = history
+    .map((h, i) => {
+      const pen = h.penalty ? ` <span style="color:var(--danger)">${h.penalty}</span>` : "";
+      const show = h.penalty === "DNF" ? "DNF" : fmt(h.penalty === "+2" ? h.t + 2000 : h.t);
+      return `#${history.length - i} ${show}${pen} <span style="opacity:.5">${h.moves}m</span>`;
+    })
+    .join("<br>");
+  movesEl.textContent = solveMoves.join(" ") || "—";
+  tip(`SOLVED ${fmt(tAcc)} · ${moveCount}m · insp ${fmt(inspectionUsed)}${penalty ? " " + penalty : ""}`);
+  t0Cube = null;
+  showResult(result);
+}
+
+function updateScrambleProgress(state) {
+  if (!scrambleMoves.length) return;
+  const byMoves = scramblePrefixLen(moveLog, scrambleMoves);
+  let byState = 0;
+  if (state) {
+    const c = new Cube2x2();
+    for (let i = 0; i < scrambleMoves.length; i++) {
+      c.applyMove(scrambleMoves[i]);
+      if (statesEqual(state, c)) byState = i + 1;
+    }
+  }
+  scrambleProgress = Math.max(byMoves, byState);
+  renderPhases();
+  renderScrambleHighlight();
+  if (byMoves >= scrambleMoves.length || (targetState && state && statesEqual(state, targetState))) {
+    startInspection();
+  }
+}
+
+function setUi(on) {
+  document.getElementById("btnDisc").disabled = !on;
+  document.getElementById("btnBat").disabled = !on;
+  document.getElementById("btnScramble").disabled = !on;
+  document.getElementById("btnSkip").disabled = !on || phase !== "scramble";
+  document.getElementById("btnCalib").disabled = !on;
+  btnConnect.disabled = on;
+}
+
+function onCubeMove(ev) {
+  const mv = ev.move && ev.move !== "?" ? ev.move : null;
+
+  if (phase === "scramble") {
+    if (!mv) return;
+    if (!acceptScrambleMove(mv)) {
+      tip(`ignore ${mv} — next ${scrambleMoves[scramblePrefixLen(moveLog, scrambleMoves)] || "—"}`, "err");
+      return;
+    }
+    moveLog.push(mv);
+    const nAfter = scramblePrefixLen(moveLog, scrambleMoves);
+    const nBefore = scramblePrefixLen(moveLog.slice(0, -1), scrambleMoves);
+    paintScrambleState();
+    // anim = move scramble qui vient d'être complété, sinon le quarter HW
+    const justDone = nAfter > nBefore ? scrambleMoves[nAfter - 1] : mv;
+    animateMove(justDone);
+    movesEl.textContent = mergeMoves(moveLog).join(" ");
+    updateScrambleProgress(conn?.cube);
+    return;
+  }
+
+  if (mv) animateMove(mv);
+  paintFromCube(ev.state);
+
+  if (phase === "inspection") {
+    if (!mv) return;
+    rawSolveMoves = [mv];
+    const sm = mergeMoves(rawSolveMoves);
+    moveCount = sm.length;
+    movesEl.textContent = sm.join(" ");
+    startTimer(ev);
+    if (ev.solved || ev.state?.isSolved?.()) stopTimer(true, ev);
+    return;
+  }
+
+  if (phase === "running") {
+    if (mv) {
+      rawSolveMoves.push(mv);
+      const sm = mergeMoves(rawSolveMoves);
+      moveCount = sm.length;
+      movesEl.textContent = sm.join(" ");
+    }
+    if (ev.solved || ev.state?.isSolved?.()) stopTimer(true, ev);
+  }
+}
+
+async function newScramble() {
+  tip("génération scramble…");
+  cancelAnimationFrame(rafTimer);
+  resultEl.classList.remove("open");
+  phase = "idle";
+  const tGen = performance.now();
+  const r = scramble2x2Official();
+  currentScramble = r.scramble;
+  targetState = r.state;
+  scrambleMoves = parseAlg(r.scramble);
+  scrambleProgress = 0;
+  moveLog.length = 0;
+  rawSolveMoves = [];
+  movesEl.textContent = "—";
+  moveCount = 0;
+  inspectionUsed = 0;
+  timerEl.textContent = "0.000";
+  scrambleEl.textContent = r.scramble;
+
+  if (conn) conn.applyMoves = false; // 3D piloté par le scramble, pas le HW brut
+  setGyroFollow(false); // blanc↑ vert→ fixe pendant le mélange
+  resetCamera();
+
+  try {
+    await conn?.send("FACELETS");
+  } catch (_) {}
+  await new Promise((res) => setTimeout(res, 80));
+  if (conn?.cube) {
+    conn.cube.reset();
+    paintFromCube(conn.cube);
+  }
+
+  setPhase("scramble");
+  tip(`scramble dist ${r.dist} (${(performance.now() - tGen) | 0}ms) — tiens blanc↑ vert→`);
+}
+
+btnConnect.onclick = async () => {
+  if (!navigator.bluetooth) {
+    alert("Chrome desktop requis (pas preview Cursor)");
+    return;
+  }
+  const mac = document.getElementById("mac").value.trim();
+  if (!mac) {
+    alert("MAC vide");
+    return;
+  }
+
+  let device;
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [
+        "00000010-0000-fff7-fff6-fff5fff4fff0",
+        "0000fee0-0000-1000-8000-00805f9b34fb",
+        "generic_access",
+        "device_information",
+        "battery_service",
+      ],
+    });
+  } catch (e) {
+    tip(e.message || String(e), "err");
+    return;
+  }
+
+  btnConnect.disabled = true;
+  try {
+    conn = new Gan2x2UI(device, { mac });
+    await conn._init();
+    setUi(true);
+    statusEl.innerHTML = `<strong>${conn.deviceName || "ok"}</strong>`;
+    paintFromCube(conn.cube);
+    tip("connecté · résolu — Calib ori (blanc↑ vert→) puis Mélanger");
+
+    conn.on("move", onCubeMove);
+    conn.on("facelets", (ev) => {
+      if (phase === "scramble") {
+        // pendant scramble: ne pas écraser le tracking local avec un état HW ambigu
+        tip(`facelets #${ev.serial}`);
+        return;
+      }
+      paintFromCube(ev.state);
+      if (phase === "running" && (ev.solved || ev.state?.isSolved?.())) stopTimer(true, ev);
+    });
+    conn.on("gyro", (ev) => applyGyro(ev.quaternion));
+    conn.on("battery", (ev) => {
+      battEl.textContent = `bat ${ev.level}%`;
+    });
+    conn.on("disconnect", () => {
+      setUi(false);
+      statusEl.innerHTML = "<strong>offline</strong>";
+      setPhase("idle");
+    });
+    conn.on("error", (ev) => tip(String(ev.error?.message || ev.error), "err"));
+  } catch (e) {
+    btnConnect.disabled = false;
+    tip(e.message || String(e), "err");
+  }
+};
+
+document.getElementById("btnDisc").onclick = () => conn?.disconnect();
+document.getElementById("btnBat").onclick = () => conn?.send("BATTERY").catch((e) => tip(e.message, "err"));
+document.getElementById("btnScramble").onclick = () => newScramble();
+document.getElementById("btnSkip").onclick = () => {
+  if (phase === "scramble") startInspection();
+};
+document.getElementById("btnCalib").onclick = () => calibrateGyro();
+document.getElementById("btnResetCam").onclick = () => resetCamera();
+document.getElementById("btnNext").onclick = () => newScramble();
+document.getElementById("btnCloseRes").onclick = () => resultEl.classList.remove("open");
+document.getElementById("btnCopy").onclick = async () => {
+  const text = lastResult
+    ? `${lastResult.scramble}\n${lastResult.solveMoves.join(" ")}\n${fmt(lastResult.t)}`
+    : "";
+  try {
+    await navigator.clipboard.writeText(text);
+    tip("reco copiée");
+  } catch {
+    tip("clipboard KO", "err");
+  }
+};
+
+tip(navigator.bluetooth ? "ready — Chrome + WebBT" : "WebBT KO", navigator.bluetooth ? "" : "err");
+statusEl.innerHTML = navigator.bluetooth ? "<strong>ready</strong>" : "<strong>pas WebBT</strong>";
+btnConnect.disabled = !navigator.bluetooth;
+
+// —— Three.js live cube ——
+try {
+  const THREE = await import("three");
+  const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+  let RoundedBoxGeometry = null;
+  try {
+    ({ RoundedBoxGeometry } = await import("three/addons/geometries/RoundedBoxGeometry.js"));
+  } catch (_) {}
+
+  const host = document.getElementById("stage");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  host.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(3.4, 3.2, 5.2);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 12;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+  const key = new THREE.DirectionalLight(0xfff5e6, 1.05);
+  key.position.set(5, 8, 4);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xa8c4ff, 0.35);
+  fill.position.set(-4, 2, -3);
+  scene.add(fill);
+
+  const root = new THREE.Group();
+  scene.add(root);
+  const cubeGroup = new THREE.Group();
+  root.add(cubeGroup);
+
+  const POS = [
+    [1, 1, 1], [-1, 1, 1], [-1, 1, -1], [1, 1, -1],
+    [1, -1, 1], [-1, -1, 1], [-1, -1, -1], [1, -1, -1],
+  ];
+  const FACE_MAT_IDX = { [U]: 2, [R]: 0, [F]: 4, [D]: 3, [L]: 1, [B]: 5 };
+  const PLASTIC = 0x141814;
+  const SIZE = 0.9;
+  const GAP = 0.04;
+  const cubieMeshes = [];
+  const homePos = [];
+
+  const boxGeo = RoundedBoxGeometry
+    ? new RoundedBoxGeometry(SIZE, SIZE, SIZE, 3, 0.08)
+    : new THREE.BoxGeometry(SIZE, SIZE, SIZE);
+
+  for (let i = 0; i < 8; i++) {
+    const body = new THREE.Mesh(
+      boxGeo,
+      new THREE.MeshStandardMaterial({ color: PLASTIC, roughness: 0.55, metalness: 0.12 })
+    );
+    const stickers = new THREE.Group();
+    const faces = [
+      { dir: [1, 0, 0], mi: 0 },
+      { dir: [-1, 0, 0], mi: 1 },
+      { dir: [0, 1, 0], mi: 2 },
+      { dir: [0, -1, 0], mi: 3 },
+      { dir: [0, 0, 1], mi: 4 },
+      { dir: [0, 0, -1], mi: 5 },
+    ];
+    const stickerMeshes = [];
+    for (const f of faces) {
+      const m = new THREE.MeshStandardMaterial({ color: PLASTIC, roughness: 0.35, metalness: 0.08 });
+      const s = new THREE.Mesh(new THREE.PlaneGeometry(SIZE * 0.82, SIZE * 0.82), m);
+      const d = 0.5 * SIZE + 0.012;
+      s.position.set(f.dir[0] * d, f.dir[1] * d, f.dir[2] * d);
+      if (f.dir[0]) s.rotation.y = f.dir[0] > 0 ? Math.PI / 2 : -Math.PI / 2;
+      else if (f.dir[1]) s.rotation.x = f.dir[1] > 0 ? -Math.PI / 2 : Math.PI / 2;
+      else if (f.dir[2] < 0) s.rotation.y = Math.PI;
+      stickers.add(s);
+      stickerMeshes[f.mi] = m;
+    }
+    const group = new THREE.Group();
+    group.add(body);
+    group.add(stickers);
+    const [x, y, z] = POS[i];
+    const sp = (SIZE + GAP) / 2;
+    group.position.set(x * sp, y * sp, z * sp);
+    homePos.push(group.position.clone());
+    cubeGroup.add(group);
+    cubieMeshes.push({ group, stickers: stickerMeshes, pos: i });
+  }
+
+  paintFromCube = (cube) => {
+    for (const c of cube.cubies()) {
+      const slot = cubieMeshes[c.pos];
+      if (!slot) continue;
+      for (let i = 0; i < 6; i++) slot.stickers[i].color.setHex(PLASTIC);
+      for (const [face, colorId] of Object.entries(c.colors)) {
+        const mi = FACE_MAT_IDX[Number(face)] ?? FACE_MAT_IDX[face];
+        const hex = FACE_HEX?.[colorId] ?? FACE_HEX?.[Number(colorId)];
+        if (slot.stickers[mi] && hex) slot.stickers[mi].color.set(hex);
+      }
+    }
+  };
+  paintFromCube(new Cube2x2());
+
+  const FACE_AXIS = {
+    U: [0, 1, 0], D: [0, -1, 0], R: [1, 0, 0], L: [-1, 0, 0], F: [0, 0, 1], B: [0, 0, -1],
+  };
+  let twist = null;
+  let twistPivot = null;
+
+  animateMove = (move) => {
+    if (!move || move === "?") return;
+    const face = move[0];
+    const axisArr = FACE_AXIS[face];
+    if (!axisArr) return;
+    let turns = 1;
+    if (move.endsWith("2")) turns = 2;
+    else if (move.endsWith("'")) turns = -1;
+    const angle = -turns * (Math.PI / 2);
+
+    if (twistPivot) {
+      while (twistPivot.children.length) cubeGroup.attach(twistPivot.children[0]);
+      cubeGroup.remove(twistPivot);
+      twistPivot = null;
+      for (let i = 0; i < 8; i++) {
+        cubieMeshes[i].group.position.copy(homePos[i]);
+        cubieMeshes[i].group.rotation.set(0, 0, 0);
+      }
+    }
+
+    const axis = new THREE.Vector3(...axisArr);
+    const pivot = new THREE.Group();
+    cubeGroup.add(pivot);
+    const thresh = 0.25;
+    for (const c of cubieMeshes) {
+      const p = c.group.position;
+      const on =
+        (axisArr[0] && Math.sign(p.x) === Math.sign(axisArr[0]) && Math.abs(p.x) > thresh) ||
+        (axisArr[1] && Math.sign(p.y) === Math.sign(axisArr[1]) && Math.abs(p.y) > thresh) ||
+        (axisArr[2] && Math.sign(p.z) === Math.sign(axisArr[2]) && Math.abs(p.z) > thresh);
+      if (on) pivot.attach(c.group);
+    }
+    twistPivot = pivot;
+    twist = { pivot, axis, angle, t0: performance.now(), dur: turns === 2 ? 110 : 80 };
+  };
+
+  const targetQ = new THREE.Quaternion();
+  let useGyro = true,
+    smooth = true,
+    hasGyroSample = false,
+    gyroFollow = false; // off pendant scramble (repère fixe scramble)
+
+  setGyroFollow = (on) => {
+    gyroFollow = !!on;
+    if (!gyroFollow) {
+      targetQ.identity();
+      root.quaternion.identity();
+    }
+  };
+
+  applyGyro = (qRawGan) => {
+    ori.push(qRawGan);
+    hasGyroSample = true;
+    if (!gyroFollow || !useGyro) return;
+    const d = ori.display();
+    targetQ.set(d.x, d.y, d.z, d.w).normalize();
+  };
+
+  calibrateGyro = () => {
+    if (!hasGyroSample) {
+      tip("bouge le cube pour avoir un sample gyro", "err");
+      return;
+    }
+    const info = ori.calibrate();
+    targetQ.set(info.display.x, info.display.y, info.display.z, info.display.w);
+    if (gyroFollow && useGyro) root.quaternion.copy(targetQ);
+    else {
+      targetQ.identity();
+      root.quaternion.identity();
+    }
+    camera.position.set(3.4, 3.2, 5.2);
+    controls.target.set(0, 0, 0);
+    tip("ori OK blanc↑ vert→");
+  };
+
+  resetCamera = () => {
+    camera.position.set(3.4, 3.2, 5.2);
+    controls.target.set(0, 0, 0);
+  };
+
+  document.getElementById("chkGyro").onchange = (e) => {
+    useGyro = e.target.checked;
+    if (!useGyro || !gyroFollow) {
+      targetQ.identity();
+      root.quaternion.identity();
+    }
+  };
+  document.getElementById("chkSmooth").onchange = (e) => {
+    smooth = e.target.checked;
+  };
+
+  function resize() {
+    const w = host.clientWidth,
+      h = host.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / Math.max(h, 1);
+    camera.updateProjectionMatrix();
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (useGyro && gyroFollow) {
+      if (smooth) root.quaternion.slerp(targetQ, 0.35);
+      else root.quaternion.copy(targetQ);
+    }
+    if (twist) {
+      const u = Math.min(1, (performance.now() - twist.t0) / twist.dur);
+      const e = 1 - (1 - u) ** 3;
+      twist.pivot.quaternion.setFromAxisAngle(twist.axis, twist.angle * e);
+      if (u >= 1) {
+        while (twist.pivot.children.length) cubeGroup.attach(twist.pivot.children[0]);
+        cubeGroup.remove(twist.pivot);
+        for (let i = 0; i < 8; i++) {
+          cubieMeshes[i].group.position.copy(homePos[i]);
+          cubieMeshes[i].group.rotation.set(0, 0, 0);
+        }
+        twistPivot = null;
+        twist = null;
+      }
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+} catch (e) {
+  tip("Three.js KO: " + e.message, "err");
+}
+</script>
+</body>
+</html>

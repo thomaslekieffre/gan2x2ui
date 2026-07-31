@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>gan2x2UI — minimal</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    input, button { font: inherit; padding: 0.4rem 0.7rem; }
+    pre { background: #111; color: #cde; padding: 1rem; border-radius: 8px; min-height: 8rem; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>gan2x2UI</h1>
+  <p>Chrome · cube allumé · blanc ↑ vert →</p>
+  <p>
+    <input id="mac" value="AA:BB:CC:DD:EE:FF" size="18" />
+    <button id="go">Connect</button>
+  </p>
+  <pre id="log"></pre>
+  <script type="module">
+    import { Gan2x2UI, mergeMoves } from "../src/index.js";
+
+    const el = document.getElementById("log");
+    const log = (m) => {
+      el.textContent += m + "\n";
+      el.scrollTop = el.scrollHeight;
+    };
+    const moves = [];
+
+    document.getElementById("go").onclick = async () => {
+      try {
+        const cube = await Gan2x2UI.connect({
+          mac: document.getElementById("mac").value.trim(),
+        });
+        log("connected " + cube.deviceName);
+        cube.on("move", (e) => {
+          moves.push(e.move);
+          log(mergeMoves(moves).join(" ") || "—");
+        });
+        cube.on("battery", (e) => log("battery " + e.level + "%"));
+        cube.on("disconnect", () => log("disconnect"));
+        await cube.send("BATTERY");
+      } catch (err) {
+        log("error: " + (err.message || err));
+      }
+    };
+  </script>
+</body>
+</html>

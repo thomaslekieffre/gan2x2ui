@@ -76,7 +76,7 @@ Roadmap features : [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
 | Option | Défaut | |
 |--------|--------|--|
-| `mac` | *requis* | MAC Bluetooth (`AA:BB:CC:…`) |
+| `mac` | *requis* | MAC Bluetooth (`AA:BB:CC:DD:EE:FF`) |
 | `resetOnConnect` | `true` | `RESET` + modèle local résolu |
 | `requestFacelets` | `true` | Si pas de reset |
 | `preferAltTx` | `false` | Write sur `fff7` |

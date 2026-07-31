@@ -1,69 +1,33 @@
-# Roadmap — features to add
+# Roadmap
 
-Prioritized for the lib + third-party site integrations.  
-*(S = small, M = medium, L = large)*
+WebBT lib for GAN 251 UI — not a timer / app.
 
-## P0 — Web timer-style integration
+## Done
 
-| # | Feature | Effort | Notes |
-|---|---------|--------|-------|
-| 1 | Documented React hook / adapter | M | move / solved / disconnect |
-| 2 | `gan251ui_` / `ganic251_` detection helpers | S | Avoid wrong driver |
-| 3 | Timer guide: scramble → insp → stop | S | Already in `examples/timer.html` + INTEGRATION |
-| 4 | HTM `mergeMoves` + tests | S | Done |
-| 5 | Twisty 2×2 replay example | M | Partial in timer |
+- GATT driver + ProtocolV3-2 crypto
+- MOVE / FACELETS / GYRO / BATTERY / RESET
+- `Cube2x2`, official URF scrambles, `mergeMoves`
+- Auto MAC (ads) + `localStorage` cache
+- FR + EN docs, `minimal` / `timer` examples
 
-## P1 — Lib DX
+## Next
 
-| # | Feature | Effort | Notes |
-|---|---------|--------|-------|
-| 6 | TypeScript types (`.d.ts` or TS rewrite) | M | Typed apps |
-| 7 | `npm` publish + CI (`npm test`) | S | GitHub Actions |
-| 8 | BLE `namePrefix` filters | S | Picker UX |
-| 9 | MAC cache helper (`localStorage`) | S | **Done** (`src/mac.js`) |
-| 10 | Minimal React example | S | Vite/Next snippet |
-| 10b | Auto-MAC via advertisements | M | **Done** — Chrome experimental flag required |
+| | |
+|--|--|
+| **npm publish** | public `gan2x2ui` (+ CI `npm test`) |
+| **Types** | `.d.ts` for TS consumers |
+| **BLE filters** | `namePrefix` `gan251ui` / `ganic251` instead of `acceptAllDevices` |
 
-## P2 — Timer / cube product
+## Maybe
 
-| # | Feature | Effort | Notes |
-|---|---------|--------|-------|
-| 11 | AO5 / AO12 helpers | S | Session stats |
-| 12 | Inspection +2 / DNF utils | S | Already in example |
-| 13 | Scramble verify (ignore wrong face) | S | Already in timer.html |
-| 14 | Timed replay (`cubeTimestamp`) | M | On MOVE events |
-| 15 | CS Timer / Twizzle export | S | scramble + reco |
-| 16 | Reconnect last device (`getDevices`) | M | Chrome only |
-
-## P3 — Protocol / hard
-
-| # | Feature | Effort | Notes |
-|---|---------|--------|-------|
-| 17 | HISTORY `0xD1` recovery after BLE drop | M | Partial parse |
-| 18 | Battery helpers + low-bat event | S | `battery` event |
-| 19 | Keep-alive / anti-sleep disconnect | M | Firmware-dependent |
-| 20 | Other GAN 2×2 matrix (same V3-2) | M | Device tests |
-
-## P4 — Nice to have
-
-| # | Feature | Effort |
-|---|---------|--------|
-| 22 | Reusable orientation calib UI | S |
-| 23 | FR + EN docs | S | **Done** |
-| 24 | CDN bundle (esm.sh / unpkg) | S |
-| 25 | Twisty visual regression | M |
+- Reconnect via `getDevices()`
+- CDN bundle (esm.sh / unpkg) once published
+- Other GAN 2×2 on same V3-2 if someone tests
 
 ## Non-goals
 
-- Inventing `L`/`D`/`B` moves from gyro.
-- Replacing existing 3×3 drivers in apps.
-- Firefox / Safari support (no usable Web Bluetooth).
-
-## Suggested order
-
-1. **Wave A**: #1 #2 #6 #8 → third-party drop-in  
-2. **Wave B**: #7 #5 #14 #15 → **npm publish** + polish
-
-Recently done: #4 #9 #10b #23
+- Timer features (AO5, insp DNF, Twizzle…) → app-side, not here
+- Inventing `L`/`D`/`B` from gyro
+- Firefox / Safari
 
 [Français](./ROADMAP.fr.md)

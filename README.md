@@ -134,7 +134,12 @@ await cube.disconnect();
 - Navigateur : Chromium + Web Bluetooth
 - Node : crypto / scramble / cube OK ; `connect` = navigateur only
 
+## Auteur
+
+Créé et maintenu par **[Thomas Lekieffre](https://github.com/thomaslekieffre)** — reverse du protocole GAN 251 UI (ProtocolV3-2) et driver Web Bluetooth open-source.
+
 ## License
 
-MIT — [LICENSE](./LICENSE).  
+MIT — [LICENSE](./LICENSE) · © 2026 Thomas Lekieffre  
+
 Non affilié à GAN Cube / CubeStation.

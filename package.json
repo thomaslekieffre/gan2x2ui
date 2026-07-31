@@ -48,7 +48,10 @@
     "url": "https://github.com/thomaslekieffre/gan2x2ui/issues"
   },
   "homepage": "https://github.com/thomaslekieffre/gan2x2ui#readme",
-  "author": "thomaslekieffre",
+  "author": {
+    "name": "Thomas Lekieffre",
+    "url": "https://github.com/thomaslekieffre"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18"

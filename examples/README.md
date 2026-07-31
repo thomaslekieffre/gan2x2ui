@@ -1,6 +1,6 @@
 # Examples / Exemples
 
-**Français** · [README](../README.md) / [README.en.md](../README.en.md)
+[README](../README.md) · [EN](../README.en.md) · [Contribuer](../CONTRIBUTING.md)
 
 ```bash
 npm run serve
@@ -8,13 +8,9 @@ npm run serve
 # http://localhost:8080/examples/timer.html
 ```
 
-Chrome desktop (Web Bluetooth).
-
-**MAC auto — obligatoire :**  
-`chrome://flags/#enable-experimental-web-platform-features` → **Enabled** → relance Chrome.  
-Champ MAC vide = auto. Sinon colle une MAC manuelle (ne commit jamais une vraie).
+Chrome + flag experimental pour MAC auto (README). Champ MAC vide = auto.
 
 | File | |
 |------|--|
-| `minimal.html` | Connect + log moves (merged HTM) |
-| `timer.html` | Scramble → inspection → timer → reco + TwistyPlayer |
+| `minimal.html` | Connect + log moves |
+| `timer.html` | Démo scramble → insp → chrono (exemple, pas la lib) |

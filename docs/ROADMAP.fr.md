@@ -1,33 +1,20 @@
 # Roadmap
 
-Lib WebBT pour GAN 251 UI — pas un timer / app.
+La lib est **complète** pour brancher un GAN 251 UI : connect, crypto, moves, état, gyro, battery, scramble URF, MAC auto.
 
 ## Done
 
-- Driver GATT + crypto ProtocolV3-2
-- MOVE / FACELETS / GYRO / BATTERY / RESET
-- `Cube2x2`, scrambles URF officiels, `mergeMoves`
-- MAC auto (ads) + cache `localStorage`
-- Docs FR + EN, examples `minimal` / `timer`
+- Driver GATT + ProtocolV3-2
+- Events `move` / `facelets` / `gyro` / `battery` / `disconnect`
+- `Cube2x2`, `scramble2x2Official`, `mergeMoves`
+- MAC auto (ads) + cache
+- Docs FR + EN, examples
 
-## Next
+## Next (packaging)
 
-| | |
-|--|--|
-| **npm publish** | `gan2x2ui` public (+ CI `npm test`) |
-| **Types** | `.d.ts` pour conso TS |
-| **Filtres BLE** | `namePrefix` `gan251ui` / `ganic251` au lieu d’`acceptAllDevices` |
+- Publish npm `gan2x2ui`
+- (optionnel) `.d.ts` si un conso TS le demande
 
-## Maybe
-
-- Reconnect `getDevices()`
-- Bundle CDN (esm.sh / unpkg) une fois publié
-- Autres 2×2 GAN même V3-2 si quelqu’un teste
-
-## Non-goals
-
-- Features timer (AO5, insp DNF, Twizzle…) → côté app, pas ici
-- Inventer `L`/`D`/`B` depuis le gyro
-- Firefox / Safari
+Pas de feature timer / AO5 / UI ici — c’est une lib, le reste va dans l’app.
 
 [English](./ROADMAP.en.md)

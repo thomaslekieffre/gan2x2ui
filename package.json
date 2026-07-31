@@ -18,11 +18,15 @@
     "docs",
     "examples",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "README.en.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.en.md"
   ],
   "scripts": {
     "serve": "npx --yes serve -l 8080 .",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "gan",

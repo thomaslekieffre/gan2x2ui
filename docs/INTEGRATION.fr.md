@@ -1,8 +1,9 @@
 # Intégration dans un site tiers
 
-Comment brancher **gan2x2UI** (GAN 251 UI / 2×2) dans une app web existante (timer, training, dashboard…).
+**gan2x2UI** est une lib complète (connect → events → scramble). Tu branches timer / UI / training chez toi.
 
-Prérequis navigateur : **Chrome / Edge** desktop (Web Bluetooth), page en `https://` ou `http://localhost`.
+Prérequis : **Chrome / Edge** desktop (Web Bluetooth), `https://` ou `http://localhost`.  
+MAC auto → flag Chrome experimental (voir [README](../README.md)).
 
 ## Install
 
@@ -129,5 +130,7 @@ npm run serve
 # http://localhost:8080/examples/minimal.html
 # http://localhost:8080/examples/timer.html
 ```
+
+Contribuer : [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 [English](./INTEGRATION.en.md)

@@ -61,7 +61,9 @@ Priorisé pour la lib + intégrations sites tiers.
 
 ## Ordre suggéré
 
-1. **Vague A** : #1 #2 #6 #8 #9 → drop-in facile pour un site tiers  
-2. **Vague B** : #5 #7 #14 #15 → polish + publish npm
+1. **Vague A** : #1 #2 #6 #8 → drop-in site tiers  
+2. **Vague B** : #7 #5 #14 #15 → **publish npm** + polish
+
+Done récemment : #4 #9 #10b #23
 
 [English](./ROADMAP.en.md)

@@ -61,7 +61,9 @@ Prioritized for the lib + third-party site integrations.
 
 ## Suggested order
 
-1. **Wave A**: #1 #2 #6 #8 #9 → easy drop-in for a third-party site  
-2. **Wave B**: #5 #7 #14 #15 → polish + npm publish
+1. **Wave A**: #1 #2 #6 #8 → third-party drop-in  
+2. **Wave B**: #7 #5 #14 #15 → **npm publish** + polish
+
+Recently done: #4 #9 #10b #23
 
 [Français](./ROADMAP.fr.md)

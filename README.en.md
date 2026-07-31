@@ -24,8 +24,10 @@ const { scramble, dist } = scramble2x2Official();
 
 ```bash
 npm i gan2x2ui
-# or: pnpm add gan2x2ui
+pnpm add gan2x2ui
 ```
+
+https://www.npmjs.com/package/gan2x2ui
 
 Local clone:
 

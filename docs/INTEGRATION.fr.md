@@ -9,8 +9,10 @@ MAC auto → flag Chrome experimental (voir [README](../README.md)).
 
 ```bash
 npm i gan2x2ui
+pnpm add gan2x2ui
 # ou clone local
 npm i /chemin/vers/gan2x2UI
+pnpm add /chemin/vers/gan2x2UI
 ```
 
 ESM natif, zéro dépendance runtime.

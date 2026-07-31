@@ -21,7 +21,6 @@ import { Gan2x2UI, scramble2x2Official, mergeMoves } from "gan2x2ui";
 Bundlers (Vite, Next, Webpack) : si besoin,
 
 ```js
-// next.config / vite
 transpilePackages: ["gan2x2ui"] // Next
 ```
 
@@ -52,22 +51,22 @@ await cube.disconnect();
 
 `Gan2x2UI.connect` ouvre le picker Bluetooth : à appeler depuis un **clic utilisateur**.
 
-## MAC
+## MAC — pas renvoyée par le connect BT
 
 La crypto ProtocolV3-2 dérive KEY/IV depuis la **MAC** hardware.  
-Web Bluetooth ne l’expose pas nativement.
+Web Bluetooth **ne l’expose pas** au moment du `requestDevice` / GATT.
 
 **Comment la trouver (Windows/Linux/Android)** :  
 `chrome://bluetooth-internals/#devices` → Address (cube allumé).  
-Sur macOS cette valeur est souvent fausse — préférer advertisement / saisie manuelle.
+Sur macOS cette valeur est souvent fausse — advertisement ou saisie manuelle.
 
 Options UX app :
 
 1. Champ texte (1ʳᵉ fois).
 2. Cache `localStorage` par nom de device.
-3. `watchAdvertisements()` + manufacturer data (flag Chrome experimental) — voir gist GAN MAC FAQ.
+3. `watchAdvertisements()` + manufacturer data (flag Chrome experimental) — semi-auto.
 
-Sans MAC correcte → decrypt KO.
+Sans MAC correcte → decrypt KO, aucun move lisible.
 
 ## Détection device
 
@@ -91,7 +90,7 @@ Même logique que `examples/timer.html` :
 3. Pendant le mélange :
    - `cube.applyMoves = false`
    - faire avancer un modèle local / viewer selon le **scramble**, pas le flux HW brut
-   - orientation 3D **fixée** (blanc ↑ vert →), gyro off
+   - orientation 3D **figée** (blanc ↑ vert →), gyro off
 4. Scramble terminé → inspection 15 s.
 5. 1ʳᵉ `move` → start chrono.
 6. `solved === true` → stop.
@@ -131,3 +130,5 @@ npm run serve
 # http://localhost:8080/examples/minimal.html
 # http://localhost:8080/examples/timer.html
 ```
+
+[English](./INTEGRATION.en.md)

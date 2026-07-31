@@ -24,6 +24,9 @@ iv[i]    = (ROOT_IV[i]  + salt[i]) % 255
 
 AES-128-CBC, Gen4 dual-align framing, 20-byte frames, CRC16 on last 2 bytes (ignored for move parse).
 
+**The hardware MAC is required** to derive KEY/IV.  
+Web Bluetooth does **not** expose it on `connect()` — type it in, or read via advertisements (experimental Chrome flag).
+
 ## Events (`bleProtoId`)
 
 | ID | Type | Payload |
@@ -49,3 +52,5 @@ Official-style scrambles use **URF** generators — matches hardware.
 | BATTERY | `DD 04 00 EF …` |
 | HARDWARE | `DF 03 00 …` |
 | RESET | `D2 0D 05 39 77 …` (mark current pose solved) |
+
+[Français](./PROTOCOL.fr.md)

@@ -1,4 +1,6 @@
-# Examples
+# Examples / Exemples
+
+**Français** · see also [README](../README.md) / [README.en.md](../README.en.md)
 
 ```bash
 npm run serve
@@ -6,11 +8,12 @@ npm run serve
 # http://localhost:8080/examples/timer.html
 ```
 
-Chrome desktop obligatoire (Web Bluetooth).
+Chrome desktop required (Web Bluetooth).
 
-| Fichier | |
-|---------|--|
-| `minimal.html` | Connect + log moves (HTM mergé) |
-| `timer.html` | Scramble → inspection → chrono → reco + TwistyPlayer |
+| File | |
+|------|--|
+| `minimal.html` | Connect + log moves (merged HTM) |
+| `timer.html` | Scramble → inspection → timer → reco + TwistyPlayer |
 
-MAC : colle la tienne (voir README — ne commit jamais une vraie MAC).
+Paste **your** MAC in the input (never commit a real one).  
+How: `chrome://bluetooth-internals/#devices` (Windows/Linux/Android).

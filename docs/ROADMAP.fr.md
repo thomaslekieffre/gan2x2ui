@@ -48,7 +48,7 @@ Priorisé pour la lib + intégrations sites tiers.
 | # | Feature | Effort |
 |---|---------|--------|
 | 22 | UI calib orientation (blanc↑ vert→) réutilisable | S |
-| 23 | Doc EN + FR | S |
+| 23 | Doc EN + FR | S | **Done** |
 | 24 | Bundle CDN (esm.sh / unpkg) | S |
 | 25 | Visual regression Twisty | M |
 
@@ -62,3 +62,5 @@ Priorisé pour la lib + intégrations sites tiers.
 
 1. **Vague A** : #1 #2 #6 #8 #9 → drop-in facile pour un site tiers  
 2. **Vague B** : #5 #7 #14 #15 → polish + publish npm
+
+[English](./ROADMAP.en.md)

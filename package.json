@@ -1,6 +1,6 @@
 {
   "name": "gan2x2ui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open-source Web Bluetooth driver for GAN 251 UI (2×2 smart cube)",
   "type": "module",
   "main": "./src/index.js",

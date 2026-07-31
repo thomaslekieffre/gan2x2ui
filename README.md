@@ -60,8 +60,6 @@ Fallback ladder : `opts.mac` → advertisements → nom 12-hex → `localStorage
 
 Sans flag / timeout → erreur claire, ou passe `mac` à la main (`chrome://bluetooth-internals/#devices` sur Win/Linux/Android).
 
-Ne commit jamais une vraie MAC dans un repo public.
-
 ## Quick start
 
 ```bash

@@ -11,8 +11,7 @@
     "./protocol": "./src/ble_protocol.js",
     "./cube2x2": "./src/cube2x2.js",
     "./scramble": "./src/scramble.js",
-    "./orientation": "./src/orientation.js",
-    "./alg": "./src/alg.js"
+    "./orientation": "./src/orientation.js"
   },
   "files": [
     "src",

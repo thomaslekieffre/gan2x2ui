@@ -13,4 +13,4 @@ Chrome desktop obligatoire (Web Bluetooth).
 | `minimal.html` | Connect + log moves (HTM mergé) |
 | `timer.html` | Scramble → inspection → chrono → reco + TwistyPlayer |
 
-MAC par défaut : `AA:BB:CC:DD:EE:FF` — adapte la tienne.
+MAC : colle la tienne (voir README — ne commit jamais une vraie MAC).

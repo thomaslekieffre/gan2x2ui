@@ -32,6 +32,28 @@ Ou clone + import local :
 import { Gan2x2UI } from "./src/index.js";
 ```
 
+## Trouver la MAC du cube
+
+Web Bluetooth **ne donne pas** la MAC (privacy). Elle sert quand même à dériver les clés AES.
+
+**Windows / Linux / Android (Chrome)** — le plus simple :
+
+1. Allume le cube (pairing).
+2. Ouvre `chrome://bluetooth-internals/#devices`
+3. Scan → colonne **Address** = ta MAC (`AA:BB:CC:DD:EE:FF`).
+
+> Sur **macOS**, cette page affiche souvent une adresse spoofée → inutilisable pour la crypto.
+
+**Autres options :**
+
+- Carte / notice / app GAN (parfois imprimée).
+- csTimer / Cubeast avec le flag  
+  `chrome://flags/#enable-experimental-web-platform-features`  
+  (lecture auto via advertisement).
+- PoC : https://gan-mac-poc.stackblitz.io/ (même flag).
+
+Stocke-la en local (`localStorage`) dans ton app — **ne la commit pas** dans un repo public.
+
 ## Quick start (navigateur)
 
 ```bash
@@ -86,36 +108,11 @@ await cube.disconnect();
 
 | Export | Rôle |
 |--------|------|
-| `Cube2x2` | Modèle CP/CO, `applyMove`, `isSolved`, `findMoveTo` |
+| `Cube2x2` | Modèle CP/CO, `applyMove`, `isSolved`, `cubies()` |
 | `scramble2x2Official()` | Random-state URF (WCA-style), `{ scramble, dist, state }` |
 | `mergeMoves(list)` | HTM compress — `U U`→`U2`, `F' F'`→`F2`, `R R'`→∅ |
 | `parseAlg` / `invertAlg` / `applyAlg` | Utilitaires alg |
 | `OrientationTracker` | Gyro → quat display après calib blanc↑ vert→ |
-
-### Algos / apprentissage (CLL, …)
-
-Firmware = `U/R/F` only. Pour des algos avec `L/D/B` :
-
-| Export | Rôle |
-|--------|------|
-| `CaseSession` | Setup cas → `sync(CP,CO)` → `done` par **état** |
-| `toURF(alg)` | Réécrit en URF (follow-along BLE) |
-| `expandAlg(alg)` | `y R` → `F` |
-| `detectMove(a,b)` | Infère `L`/`D`/`B` via diff d’état |
-| `matchesAlg(before, after, alg)` | Vérifie l’effet |
-
-```js
-import { CaseSession, toURF } from "gan2x2ui";
-
-const session = new CaseSession();
-session.setupCase(scrambleVersLeCas);
-cube.on("facelets", ({ CP, CO }) => {
-  const { done, lastInferred } = session.sync(CP, CO);
-  // lastInferred peut être "L" même si le BLE dit "R"
-  if (done) console.log("cas OK");
-});
-toURF("L U L' U'"); // { urf, dist }
-```
 
 ### Bas niveau
 

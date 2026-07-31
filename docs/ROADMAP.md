@@ -41,9 +41,7 @@ Priorisé pour la lib + intégrations sites tiers.
 | 17 | HISTORY `0xD1` recovery après drop BLE | M | Parse partiel |
 | 18 | Battery helpers + low-bat event | S | Event `battery` |
 | 19 | Keep-alive / anti-sleep disconnect | M | Suivant firmware |
-| 20 | Facelets-diff L/D/B | S | **Done** — `detectMove` / `CaseSession.sync` |
-| 21 | `toURF` + `expandAlg` + `CaseSession` | S | **Done** — `src/alg.js` |
-| 22 | Matrice autres 2×2 GAN (même V3-2) | M | Tests devices |
+| 20 | Matrice autres 2×2 GAN (même V3-2) | M | Tests devices |
 
 ## P4 — Nice to have
 

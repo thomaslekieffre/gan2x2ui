@@ -31,7 +31,7 @@ Le connect BLE **doit** tourner côté client uniquement (`"use client"`, pas de
 
 ```js
 const cube = await Gan2x2UI.connect({
-  mac: "AA:BB:CC:DD:EE:FF", // MAC Bluetooth du cube
+  mac: "AA:BB:CC:DD:EE:FF", // ta MAC hardware
   resetOnConnect: true,      // pose actuelle = résolu
 });
 
@@ -54,15 +54,20 @@ await cube.disconnect();
 
 ## MAC
 
-La crypto ProtocolV3-2 dérive KEY/IV depuis la **MAC** hardware.
+La crypto ProtocolV3-2 dérive KEY/IV depuis la **MAC** hardware.  
+Web Bluetooth ne l’expose pas nativement.
 
-Options UX :
+**Comment la trouver (Windows/Linux/Android)** :  
+`chrome://bluetooth-internals/#devices` → Address (cube allumé).  
+Sur macOS cette valeur est souvent fausse — préférer advertisement / saisie manuelle.
 
-1. Champ texte (utilisateur colle la MAC).
-2. Cache `localStorage` après la 1ʳᵉ saisie.
-3. Capture depuis advertisement BLE si ta stack le fait déjà.
+Options UX app :
 
-Sans MAC correcte → decrypt KO, aucun move lisible.
+1. Champ texte (1ʳᵉ fois).
+2. Cache `localStorage` par nom de device.
+3. `watchAdvertisements()` + manufacturer data (flag Chrome experimental) — voir gist GAN MAC FAQ.
+
+Sans MAC correcte → decrypt KO.
 
 ## Détection device
 
@@ -107,28 +112,6 @@ cube.on("move", (e) => {
 - Ne réutilise pas un pipeline facelets **3×3 (54 stickers)** tel quel : le modèle natif est **CP/CO** (`Cube2x2`).
 
 Gyro = quaternion d’orientation seulement. **Ne mappe pas** les lettres de moves via le gyro (firmware = axes U/R/F).
-
-## Algos avec L/D/B (CLL, etc.)
-
-Ne compare **pas** le flux HW à l’algo. Utilise l’état :
-
-```js
-import { CaseSession, toURF } from "gan2x2ui";
-
-const session = new CaseSession();
-session.setupCase(setupScramble); // vers le cas
-
-cube.on("facelets", ({ CP, CO }) => {
-  const { done, lastInferred } = session.sync(CP, CO);
-  // lastInferred peut être "L" même si hwMove === "R"
-  if (done) { /* succès */ }
-});
-
-// Variante affichable / followable en URF only
-toURF("R U' L' U R' U' L U");
-```
-
-Détails : `CaseSession`, `detectMove`, `expandAlg`, `matchesAlg` — voir README.
 
 ## Checklist intégration
 

@@ -52,12 +52,3 @@ export {
   randomState,
   solveURF,
 } from "./scramble.js";
-
-export {
-  expandAlg,
-  detectMove,
-  stateAfter,
-  matchesAlg,
-  toURF,
-  CaseSession,
-} from "./alg.js";

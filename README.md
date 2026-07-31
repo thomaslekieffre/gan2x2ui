@@ -9,7 +9,9 @@ Chrome / Edge desktop · `localhost` ou HTTPS · ESM natif, zéro dépendance.
 ```js
 import { Gan2x2UI, scramble2x2Official, mergeMoves } from "gan2x2ui";
 
-const cube = await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
+// MAC auto via BLE advertisements (flag Chrome experimental)
+const cube = await Gan2x2UI.connect();
+// ou forcer : await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
 
 cube.on("move", ({ move, hwMove, state }) => {
   console.log(move, state.isSolved());
@@ -34,25 +36,29 @@ Ou clone + import local :
 import { Gan2x2UI } from "./src/index.js";
 ```
 
-## MAC — pas auto au connect
+## MAC — auto via advertisements
 
-**Non :** un `navigator.bluetooth.requestDevice()` / GATT connect **ne fournit pas** la MAC.
+WebBT ne donne **pas** la MAC au GATT. La crypto GAN en a besoin → on la lit dans le **Manufacturer Specific Data** des ads BLE (derniers 6 octets, convention GAN/csTimer).
 
-Chrome expose un `device.id` opaque (par origine), pas l’adresse hardware.  
-Or la crypto GAN a **besoin** de la vraie MAC → tu dois la passer dans `opts.mac`.
+```js
+const cube = await Gan2x2UI.connect(); // auto
+console.log(cube.mac, cube.macSource); // "aa:bb:…" / "advertisement"
+```
 
-| Méthode | Auto ? |
-|---------|--------|
-| Champ + `localStorage` | Manuel 1× |
-| `chrome://bluetooth-internals/#devices` | Manuel (Windows/Linux/Android) |
-| `watchAdvertisements()` + manufacturer data | Semi-auto (flag Chrome experimental) |
-| Nom BLE contenant la MAC | Rare selon firmware |
+### Obligatoire pour la MAC auto
 
-**Windows / Linux / Android :** cube allumé → `chrome://bluetooth-internals/#devices` → colonne Address.  
-**macOS :** cette page est souvent spoofée → advertisement ou saisie manuelle.
+Sans ça, `watchAdvertisements()` est mort et le connect auto échoue :
 
-PoC auto : https://gan-mac-poc.stackblitz.io/  
-Flag : `chrome://flags/#enable-experimental-web-platform-features`
+1. Ouvre `chrome://flags/#enable-experimental-web-platform-features`
+2. Passe à **Enabled**
+3. **Relance Chrome** complètement
+4. (Si toujours KO) aussi `chrome://flags/#enable-web-bluetooth-new-permissions-backend` → Enabled
+
+Bluefy iOS : Settings → **Enable BLE Advertisements**.
+
+Fallback ladder : `opts.mac` → advertisements → nom 12-hex → `localStorage` cache.
+
+Sans flag / timeout → erreur claire, ou passe `mac` à la main (`chrome://bluetooth-internals/#devices` sur Win/Linux/Android).
 
 Ne commit jamais une vraie MAC dans un repo public.
 
@@ -68,9 +74,9 @@ npm run serve
 - Protocole : [`docs/PROTOCOL.fr.md`](./docs/PROTOCOL.fr.md) · [EN](./docs/PROTOCOL.en.md)
 - Roadmap : [`docs/ROADMAP.fr.md`](./docs/ROADMAP.fr.md) · [EN](./docs/ROADMAP.en.md)
 
-1. **Chrome** (pas un preview IDE).
+1. **Chrome** + flag experimental **obligatoire** pour MAC auto (voir section MAC).
 2. Cube allumé, **blanc ↑ / vert →**.
-3. Colle ta MAC → Connect (`RESET` = pose actuelle résolue).
+3. Connect (champ MAC vide = auto) → `RESET` = pose actuelle résolue.
 4. Bouge le cube.
 
 ## API
@@ -79,7 +85,10 @@ npm run serve
 
 | Option | Défaut | |
 |--------|--------|--|
-| `mac` | *requis* | MAC Bluetooth (`AA:BB:CC:DD:EE:FF`) |
+| `mac` | auto | MAC Bluetooth — omis = advertisements |
+| `autoMac` | `true` | Lit manufacturer data si pas de `mac` |
+| `macTimeoutMs` | `10000` | Timeout ads |
+| `cacheMac` | `true` | Persist `localStorage` |
 | `resetOnConnect` | `true` | `RESET` + modèle local résolu |
 | `requestFacelets` | `true` | Si pas de reset |
 | `preferAltTx` | `false` | Write sur `fff7` |
@@ -89,7 +98,7 @@ npm run serve
 
 | Event | Payload utile |
 |-------|----------------|
-| `connect` | `{ name, key, solved }` |
+| `connect` | `{ name, mac, macSource, key, solved }` |
 | `move` | `{ move, hwMove, direction, faceHot, serial, state, solved, q }` |
 | `gyro` | `{ quaternion, vx, vy, vz }` |
 | `facelets` | `{ CP, CO, state, solved }` |

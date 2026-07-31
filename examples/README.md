@@ -1,6 +1,6 @@
 # Examples / Exemples
 
-**Français** · see also [README](../README.md) / [README.en.md](../README.en.md)
+**Français** · [README](../README.md) / [README.en.md](../README.en.md)
 
 ```bash
 npm run serve
@@ -8,12 +8,13 @@ npm run serve
 # http://localhost:8080/examples/timer.html
 ```
 
-Chrome desktop required (Web Bluetooth).
+Chrome desktop (Web Bluetooth).
+
+**MAC auto — obligatoire :**  
+`chrome://flags/#enable-experimental-web-platform-features` → **Enabled** → relance Chrome.  
+Champ MAC vide = auto. Sinon colle une MAC manuelle (ne commit jamais une vraie).
 
 | File | |
 |------|--|
 | `minimal.html` | Connect + log moves (merged HTM) |
 | `timer.html` | Scramble → inspection → timer → reco + TwistyPlayer |
-
-Paste **your** MAC in the input (never commit a real one).  
-How: `chrome://bluetooth-internals/#devices` (Windows/Linux/Android).

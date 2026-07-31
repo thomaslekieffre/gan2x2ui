@@ -9,7 +9,9 @@ Chrome / Edge desktop · `localhost` or HTTPS · native ESM, zero runtime deps.
 ```js
 import { Gan2x2UI, scramble2x2Official, mergeMoves } from "gan2x2ui";
 
-const cube = await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
+// Auto MAC from BLE advertisements (Chrome experimental flag)
+const cube = await Gan2x2UI.connect();
+// or force: await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
 
 cube.on("move", ({ move, hwMove, state }) => {
   console.log(move, state.isSolved());
@@ -34,25 +36,29 @@ Or clone + local import:
 import { Gan2x2UI } from "./src/index.js";
 ```
 
-## MAC — not automatic on connect
+## MAC — auto via advertisements
 
-**No:** `navigator.bluetooth.requestDevice()` / GATT connect does **not** expose the hardware MAC.
+WebBT does **not** expose the hardware MAC on GATT. GAN crypto needs it → we read **Manufacturer Specific Data** from BLE ads (last 6 bytes, GAN/csTimer convention).
 
-Chrome gives an opaque per-origin `device.id`, not the real address.  
-GAN crypto **requires** the real MAC → you must pass `opts.mac`.
+```js
+const cube = await Gan2x2UI.connect(); // auto
+console.log(cube.mac, cube.macSource); // "aa:bb:…" / "advertisement"
+```
 
-| Method | Automatic? |
-|--------|------------|
-| Text field + `localStorage` | Manual once |
-| `chrome://bluetooth-internals/#devices` | Manual (Windows/Linux/Android) |
-| `watchAdvertisements()` + manufacturer data | Semi-auto (Chrome experimental flag) |
-| MAC embedded in BLE name | Rare / firmware-dependent |
+### Required for auto MAC
 
-**Windows / Linux / Android:** cube on → `chrome://bluetooth-internals/#devices` → Address column.  
-**macOS:** that page is often spoofed → use advertisements or type it in.
+Without this, `watchAdvertisements()` is dead and auto-connect fails:
 
-Auto PoC: https://gan-mac-poc.stackblitz.io/  
-Flag: `chrome://flags/#enable-experimental-web-platform-features`
+1. Open `chrome://flags/#enable-experimental-web-platform-features`
+2. Set to **Enabled**
+3. **Fully restart Chrome**
+4. (If still failing) also enable `chrome://flags/#enable-web-bluetooth-new-permissions-backend`
+
+Bluefy iOS: Settings → **Enable BLE Advertisements**.
+
+Fallback ladder: `opts.mac` → advertisements → 12-hex name → `localStorage` cache.
+
+No flag / timeout → clear error, or pass `mac` manually (`chrome://bluetooth-internals/#devices` on Win/Linux/Android).
 
 Never commit a real MAC to a public repo.
 
@@ -68,9 +74,9 @@ npm run serve
 - Protocol: [`docs/PROTOCOL.en.md`](./docs/PROTOCOL.en.md) · [FR](./docs/PROTOCOL.fr.md)
 - Roadmap: [`docs/ROADMAP.en.md`](./docs/ROADMAP.en.md) · [FR](./docs/ROADMAP.fr.md)
 
-1. Use **Chrome** (not an IDE preview).
+1. **Chrome** + experimental flag **required** for auto MAC (see MAC section).
 2. Cube on, **white ↑ / green →**.
-3. Paste your MAC → Connect (`RESET` marks current pose solved).
+3. Connect (empty MAC field = auto) → `RESET` marks current pose solved.
 4. Turn the cube.
 
 ## API
@@ -79,7 +85,10 @@ npm run serve
 
 | Option | Default | |
 |--------|---------|--|
-| `mac` | *required* | Bluetooth MAC (`AA:BB:CC:DD:EE:FF`) |
+| `mac` | auto | Bluetooth MAC — omit = advertisements |
+| `autoMac` | `true` | Read manufacturer data if no `mac` |
+| `macTimeoutMs` | `10000` | Ads timeout |
+| `cacheMac` | `true` | Persist in `localStorage` |
 | `resetOnConnect` | `true` | Firmware `RESET` + local solved model |
 | `requestFacelets` | `true` | If not resetting |
 | `preferAltTx` | `false` | Write on `fff7` |
@@ -89,63 +98,22 @@ npm run serve
 
 | Event | Useful payload |
 |-------|----------------|
-| `connect` | `{ name, key, solved }` |
-| `move` | `{ move, hwMove, direction, faceHot, serial, state, solved, q }` |
+| `connect` | `{ name, mac, macSource, solved }` |
+| `move` | `{ move, hwMove, serial, solved, state }` |
 | `gyro` | `{ quaternion, vx, vy, vz }` |
-| `facelets` | `{ CP, CO, state, solved }` |
+| `facelets` | `{ CP, CO, serial, solved, state }` |
 | `battery` | `{ level }` |
 | `disconnect` | `{}` |
-| `error` | `{ error, ct }` |
+| `error` | `{ error }` |
 
-```js
-const off = cube.on("move", handler);
-off();
+### Helpers
 
-await cube.send("BATTERY");
-await cube.markSolved();
-cube.applyMoves = false;
-await cube.disconnect();
-```
+`Cube2x2`, `scramble2x2Official`, `mergeMoves`, `OrientationTracker`, `resolveMac`, crypto/protocol exports — see `src/index.js`.
 
-### Cube & scramble
+## Firmware note (URF)
 
-| Export | Role |
-|--------|------|
-| `Cube2x2` | CP/CO model |
-| `scramble2x2Official()` | Random-state URF scramble |
-| `mergeMoves(list)` | `U U`→`U2`, `F' F'`→`F2` |
-| `parseAlg` / `invertAlg` / `applyAlg` | Utils |
-| `OrientationTracker` | Gyro → display quat |
-
-### Low level
-
-`decodePacket`, `encodeCommand`, `deriveKeyIv`, `ganCrypt`, `FACE_ONEHOT` — see protocol docs.
-
-## Firmware limits
-
-Same as CubeStation:
-
-- MOVE reports **3 axes** only: `U` / `R` / `F`
-- Physical `L` / `D` / `B` share the opposite-face one-hot
-- Gyro is orientation, not face disambiguation
-- Official-style scrambles are URF-only
-
-## Layout
-
-```
-src/          driver
-examples/     minimal + timer
-docs/         FR + EN
-test/         node:test
-```
-
-## Compatibility
-
-- Browser: Chromium + Web Bluetooth
-- Node: crypto / scramble / cube without BLE; `connect` is browser-only
+Like CubeStation: MOVE frames only report **U/R/F**. Physical L/D/B share opposite-face one-hots. Official scrambles are **URF**. Gyro = orientation only.
 
 ## License
 
-MIT — [LICENSE](./LICENSE).
-
-Not affiliated with GAN Cube / CubeStation.
+MIT

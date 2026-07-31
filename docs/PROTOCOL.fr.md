@@ -25,7 +25,9 @@ iv[i]    = (ROOT_IV[i]  + salt[i]) % 255
 AES-128-CBC, framing Gen4 dual-align, frames 20 octets, CRC16 sur les 2 derniers (ignoré pour le parse moves).
 
 **La MAC hardware est obligatoire** pour dériver KEY/IV.  
-Web Bluetooth ne la fournit **pas** au `connect()` — saisie manuelle ou lecture via advertisements (flag experimental).
+Web Bluetooth ne la fournit **pas** au GATT. `Gan2x2UI.connect()` la lit auto via advertisements  
+(**obligatoire** : `chrome://flags/#enable-experimental-web-platform-features` → Enabled → relance Chrome),  
+sinon `opts.mac` / cache / saisie manuelle.
 
 ## Events (`bleProtoId`)
 

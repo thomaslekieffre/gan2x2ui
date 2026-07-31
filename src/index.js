@@ -12,6 +12,14 @@ export {
   CHAR_TX,
   CHAR_TX_ALT,
   toHex,
+  GAN_COMPANY_IDS,
+  resolveMac,
+  resolveMacFromAdvertisements,
+  extractMacFromManufacturerData,
+  extractMacFromDataView,
+  extractMacFromDeviceName,
+  loadCachedMac,
+  saveCachedMac,
 } from "./connect.js";
 
 export { fromHex, deriveKeyIv, parseMac, ROOT_KEY, ROOT_IV, ganCrypt } from "./crypto.js";

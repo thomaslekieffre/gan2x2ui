@@ -7,14 +7,19 @@
 import { createSession, SERVICE, CHAR_RX, CHAR_TX, CHAR_TX_ALT, toHex } from "./crypto.js";
 import { decodePacket, encodeCommand } from "./ble_protocol.js";
 import { Cube2x2 } from "./cube2x2.js";
+import { GAN_COMPANY_IDS, resolveMac } from "./mac.js";
 
 /**
  * @typedef {object} ConnectOptions
- * @property {string|Uint8Array} mac  MAC Bluetooth du cube (ex. `AA:BB:CC:DD:EE:FF`)
+ * @property {string|Uint8Array} [mac]  MAC Bluetooth — optionnel si auto via advertisements
+ * @property {boolean} [autoMac=true]  Si pas de `mac`, lit manufacturer data (flag Chrome experimental)
+ * @property {number} [macTimeoutMs=10000]  Timeout watchAdvertisements
+ * @property {boolean} [cacheMac=true]  Persiste MAC dans localStorage
  * @property {boolean} [resetOnConnect=true]  RESET firmware + modèle local = résolu
  * @property {boolean} [requestFacelets=true]  Demande FACELETS si pas de reset
  * @property {boolean} [preferAltTx=false]  Écrire sur FFF7 au lieu de FFF5
  * @property {BluetoothDevice} [device]  Device déjà choisi (sinon `requestDevice`)
+ * @property {AbortSignal} [signal]
  */
 
 function emit(listeners, type, payload) {
@@ -38,9 +43,6 @@ export class Gan2x2UI {
     if (!navigator.bluetooth) {
       throw new Error("Web Bluetooth indisponible — Chrome / Edge desktop requis");
     }
-    if (!opts.mac) {
-      throw new Error("opts.mac requis (ex. AA:BB:CC:DD:EE:FF)");
-    }
 
     const optionalServices = [
       SERVICE,
@@ -55,9 +57,19 @@ export class Gan2x2UI {
       (await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
         optionalServices,
+        optionalManufacturerData: GAN_COMPANY_IDS,
       }));
 
-    const cube = new Gan2x2UI(device, opts);
+    const resolved = await resolveMac(device, {
+      mac: opts.mac,
+      autoMac: opts.autoMac,
+      macTimeoutMs: opts.macTimeoutMs,
+      signal: opts.signal,
+      cache: opts.cacheMac !== false,
+    });
+
+    const cube = new Gan2x2UI(device, { ...opts, mac: resolved.mac });
+    cube.macSource = resolved.source;
     await cube._init();
     return cube;
   }
@@ -69,7 +81,12 @@ export class Gan2x2UI {
   constructor(device, opts) {
     this.device = device;
     this.opts = opts;
+    if (!opts.mac) throw new Error("opts.mac requis (passe par Gan2x2UI.connect pour l'auto)");
     this.session = createSession(opts.mac);
+    /** @type {string} */
+    this.mac = [...this.session.mac].map((b) => b.toString(16).padStart(2, "0")).join(":");
+    /** @type {'opts'|'advertisement'|'name'|'cache'|null} */
+    this.macSource = null;
     this.cube = new Cube2x2();
     this.listeners = new Map();
     this.lastSerial = -1;
@@ -189,6 +206,8 @@ export class Gan2x2UI {
 
     emit(this.listeners, "connect", {
       name: this.deviceName,
+      mac: this.mac,
+      macSource: this.macSource,
       key: toHex(this.session.key),
       solved: this.cube.isSolved(),
     });
@@ -284,3 +303,13 @@ export class Gan2x2UI {
 export { Gan2x2UI as Gan251Cube };
 
 export { SERVICE, CHAR_RX, CHAR_TX, CHAR_TX_ALT, createSession, toHex };
+export {
+  GAN_COMPANY_IDS,
+  resolveMac,
+  resolveMacFromAdvertisements,
+  extractMacFromManufacturerData,
+  extractMacFromDataView,
+  extractMacFromDeviceName,
+  loadCachedMac,
+  saveCachedMac,
+} from "./mac.js";

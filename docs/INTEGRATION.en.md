@@ -30,7 +30,7 @@ BLE `connect` must run **client-side only** (`"use client"`, no SSR).
 
 ```js
 const cube = await Gan2x2UI.connect({
-  mac: "AA:BB:CC:DD:EE:FF", // your hardware MAC
+  // mac: "AA:BB:CC:DD:EE:FF", // optional — else auto from ads
   resetOnConnect: true,      // current pose = solved
 });
 
@@ -51,20 +51,19 @@ await cube.disconnect();
 
 `Gan2x2UI.connect` opens the Bluetooth picker — call it from a **user gesture**.
 
-## MAC — not returned by BT connect
+## MAC — auto via advertisements
 
 ProtocolV3-2 derives KEY/IV from the **hardware MAC**.  
-Web Bluetooth does **not** expose it on connect.
+Web Bluetooth does **not** expose it on GATT — we read Manufacturer Specific Data from ads.
 
-**How to find it (Windows/Linux/Android):**  
-`chrome://bluetooth-internals/#devices` → Address (cube on).  
-On macOS that value is often fake — use advertisements or manual entry.
+```js
+const cube = await Gan2x2UI.connect(); // auto
+// or: await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
+```
 
-App UX options:
-
-1. Text field (first time).
-2. `localStorage` cache keyed by device name.
-3. `watchAdvertisements()` + manufacturer data (Chrome experimental flag).
+**Chrome:** `chrome://flags/#enable-experimental-web-platform-features` → **Enabled** → **restart Chrome** (required for auto MAC).  
+If still failing: also `chrome://flags/#enable-web-bluetooth-new-permissions-backend`.  
+Fallback: 12-hex name → `localStorage` cache → else error / manual (`chrome://bluetooth-internals/#devices`).
 
 Wrong MAC → decrypt fails, no readable moves.
 

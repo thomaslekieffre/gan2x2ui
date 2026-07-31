@@ -20,9 +20,9 @@ Prioritized for the lib + third-party site integrations.
 | 6 | TypeScript types (`.d.ts` or TS rewrite) | M | Typed apps |
 | 7 | `npm` publish + CI (`npm test`) | S | GitHub Actions |
 | 8 | BLE `namePrefix` filters | S | Picker UX |
-| 9 | MAC cache helper (`localStorage`) | S | First-connect DX |
+| 9 | MAC cache helper (`localStorage`) | S | **Done** (`src/mac.js`) |
 | 10 | Minimal React example | S | Vite/Next snippet |
-| 10b | Optional auto-MAC via advertisements | M | Needs Chrome experimental flag |
+| 10b | Auto-MAC via advertisements | M | **Done** — Chrome experimental flag required |
 
 ## P2 — Timer / cube product
 

@@ -14,7 +14,7 @@
   <h1>gan2x2UI</h1>
   <p>Chrome · cube allumé · blanc ↑ vert →</p>
   <p>
-    <input id="mac" value="" placeholder="AA:BB:CC:DD:EE:FF" size="18" />
+    <input id="mac" value="" placeholder="MAC auto (vide = ads)" size="22" title="laissez vide pour auto" />
     <button id="go">Connect</button>
   </p>
   <pre id="log"></pre>
@@ -30,10 +30,14 @@
 
     document.getElementById("go").onclick = async () => {
       try {
+        const raw = document.getElementById("mac").value.trim();
+        log(raw ? "connect (MAC manuelle)…" : "connect (MAC auto via ads)…");
         const cube = await Gan2x2UI.connect({
-          mac: document.getElementById("mac").value.trim(),
+          mac: raw || undefined,
+          resetOnConnect: true,
         });
-        log("connected " + cube.deviceName);
+        document.getElementById("mac").value = cube.mac;
+        log(`connected ${cube.deviceName} · mac ${cube.mac} (${cube.macSource})`);
         cube.on("move", (e) => {
           moves.push(e.move);
           log(mergeMoves(moves).join(" ") || "—");

@@ -112,7 +112,7 @@
 <body>
 <header>
   <h1>GAN 251 <span>UI</span></h1>
-  <input id="mac" value="" placeholder="AA:BB:CC:DD:EE:FF" style="width:148px" title="MAC">
+  <input id="mac" value="" placeholder="MAC auto" style="width:148px" title="vide = auto via advertisements">
   <button class="primary" id="btnConnect">Connecter</button>
   <button id="btnDisc" disabled>Disconnect</button>
   <button id="btnBat" disabled>Battery</button>
@@ -167,7 +167,7 @@
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
-    "gan2x2ui": "../src/index.js?v=20",
+    "gan2x2ui": "../src/index.js?v=21",
     "cubing/twisty": "https://cdn.cubing.net/v0/js/cubing/twisty"
   }
 }
@@ -577,35 +577,18 @@ btnConnect.onclick = async () => {
     alert("Chrome desktop requis (pas preview Cursor)");
     return;
   }
-  const mac = document.getElementById("mac").value.trim();
-  if (!mac) {
-    alert("MAC vide");
-    return;
-  }
-
-  let device;
-  try {
-    device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [
-        "00000010-0000-fff7-fff6-fff5fff4fff0",
-        "0000fee0-0000-1000-8000-00805f9b34fb",
-        "generic_access",
-        "device_information",
-        "battery_service",
-      ],
-    });
-  } catch (e) {
-    tip(e.message || String(e), "err");
-    return;
-  }
+  const macRaw = document.getElementById("mac").value.trim();
 
   btnConnect.disabled = true;
+  tip(macRaw ? "connexion…" : "connexion + MAC auto (ads)…");
   try {
-    conn = new Gan2x2UI(device, { mac });
-    await conn._init();
+    conn = await Gan2x2UI.connect({
+      mac: macRaw || undefined,
+      resetOnConnect: true,
+    });
+    document.getElementById("mac").value = conn.mac;
     setUi(true);
-    statusEl.innerHTML = `<strong>${conn.deviceName || "ok"}</strong>`;
+    statusEl.innerHTML = `<strong>${conn.deviceName || "ok"}</strong> · ${conn.mac} <small>(${conn.macSource})</small>`;
     paintFromCube(conn.cube);
     tip("connecté · résolu — Calib ori (blanc↑ vert→) puis Mélanger");
 

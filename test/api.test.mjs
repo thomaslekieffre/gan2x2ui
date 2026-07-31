@@ -8,6 +8,8 @@ import {
   Cube2x2,
   deriveKeyIv,
   decodeMove,
+  extractMacFromDataView,
+  extractMacFromDeviceName,
 } from "../src/index.js";
 
 describe("mergeMoves", () => {
@@ -53,5 +55,17 @@ describe("decodeMove", () => {
     assert.equal(decodeMove(1, 32).move, "R'");
     assert.equal(decodeMove(0, 2).move, "U");
     assert.equal(decodeMove(0, 8).move, "F");
+  });
+});
+
+describe("mac extract", () => {
+  it("lit les 6 derniers octets LE → AA:BB:…", () => {
+    // payload type + MAC LE (FF EE DD CC BB AA en fin → AA:BB:CC:DD:EE:FF)
+    const buf = Uint8Array.from([0x01, 0xff, 0xee, 0xdd, 0xcc, 0xbb, 0xaa]);
+    assert.equal(extractMacFromDataView(new DataView(buf.buffer)), "aa:bb:cc:dd:ee:ff");
+  });
+  it("nom 12-hex", () => {
+    assert.equal(extractMacFromDeviceName("GAN-xxx-AABBCCDDEEFF"), "aa:bb:cc:dd:ee:ff");
+    assert.equal(extractMacFromDeviceName("GAN251Ui_ABC"), null);
   });
 });

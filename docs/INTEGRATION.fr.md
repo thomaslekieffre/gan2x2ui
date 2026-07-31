@@ -30,7 +30,7 @@ Le connect BLE **doit** tourner côté client uniquement (`"use client"`, pas de
 
 ```js
 const cube = await Gan2x2UI.connect({
-  mac: "AA:BB:CC:DD:EE:FF", // ta MAC hardware
+  // mac: "AA:BB:CC:DD:EE:FF", // optionnel — sinon auto via ads
   resetOnConnect: true,      // pose actuelle = résolu
 });
 
@@ -51,20 +51,19 @@ await cube.disconnect();
 
 `Gan2x2UI.connect` ouvre le picker Bluetooth : à appeler depuis un **clic utilisateur**.
 
-## MAC — pas renvoyée par le connect BT
+## MAC — auto via advertisements
 
 La crypto ProtocolV3-2 dérive KEY/IV depuis la **MAC** hardware.  
-Web Bluetooth **ne l’expose pas** au moment du `requestDevice` / GATT.
+Web Bluetooth **ne l’expose pas** au GATT — on la lit dans le Manufacturer Specific Data des ads.
 
-**Comment la trouver (Windows/Linux/Android)** :  
-`chrome://bluetooth-internals/#devices` → Address (cube allumé).  
-Sur macOS cette valeur est souvent fausse — advertisement ou saisie manuelle.
+```js
+const cube = await Gan2x2UI.connect(); // auto
+// ou : await Gan2x2UI.connect({ mac: "AA:BB:CC:DD:EE:FF" });
+```
 
-Options UX app :
-
-1. Champ texte (1ʳᵉ fois).
-2. Cache `localStorage` par nom de device.
-3. `watchAdvertisements()` + manufacturer data (flag Chrome experimental) — semi-auto.
+**Chrome :** `chrome://flags/#enable-experimental-web-platform-features` → **Enabled** → **relance Chrome** (obligatoire pour MAC auto).  
+Si KO : aussi `chrome://flags/#enable-web-bluetooth-new-permissions-backend`.  
+Fallback : nom 12-hex → cache `localStorage` → sinon erreur / saisie manuelle (`chrome://bluetooth-internals/#devices`).
 
 Sans MAC correcte → decrypt KO, aucun move lisible.
 

@@ -129,6 +129,10 @@ await cube.disconnect();
 - Gyro = orientation, pas discrimination de face
 - Scrambles officiels = URF
 
+## Utilisé par
+
+- **[csTimer](https://github.com/cs0x7f/cstimer)** — support Bluetooth GAN 251 UI (2×2), via PR [#551](https://github.com/cs0x7f/cstimer/pull/551) (vendored en IIFE dans le repo csTimer)
+
 ## Compat
 
 - Navigateur : Chromium + Web Bluetooth
